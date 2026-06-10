@@ -15,7 +15,7 @@ async function getVenues(req, res, next) {
 async function getVenueSlots(req, res, next) {
   try {
     const { id } = req.params;
-    const { date } = req.query;
+    const { date, startTime, endTime } = req.query;
 
     if (!date) {
       return res.status(400).json({
@@ -23,7 +23,7 @@ async function getVenueSlots(req, res, next) {
       });
     }
 
-    const slots = await venueService.getVenueSlots(id, date);
+    const slots = await venueService.getVenueSlots(id, date, startTime, endTime);
 
     return res.status(200).json({
       data: slots,

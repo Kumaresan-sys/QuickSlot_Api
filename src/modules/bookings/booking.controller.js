@@ -25,6 +25,15 @@ async function createBooking(req, res, next) {
       });
     }
 
+    const { getIo } = require("../../config/socket");
+    const io = getIo();
+    io.emit("slot_update", {
+      venueId: validation.data.venueId,
+      slotId: validation.data.slotId,
+      date: validation.data.bookingDate,
+      status: "BOOKED"
+    });
+
     return res.status(201).json({
       message: "Booking created successfully",
       data: result.data,
@@ -69,6 +78,21 @@ async function cancelBooking(req, res, next) {
         message: "Booking not found or already cancelled",
       });
     }
+
+    const { getIo } = require("../../config/socket");
+    const io = getIo();
+    
+    // Format Date object back to YYYY-MM-DD if needed
+    const bookingDateStr = cancelledBooking.booking_date instanceof Date 
+      ? cancelledBooking.booking_date.toISOString().split('T')[0]
+      : cancelledBooking.booking_date;
+
+    io.emit("slot_update", {
+      venueId: cancelledBooking.venue_id,
+      slotId: cancelledBooking.slot_id,
+      date: bookingDateStr,
+      status: "AVAILABLE"
+    });
 
     return res.status(200).json({
       message: "Booking cancelled successfully",

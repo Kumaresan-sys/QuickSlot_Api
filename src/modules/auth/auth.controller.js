@@ -1,14 +1,17 @@
 const authService = require("./auth.service");
-
+const { registerSchema, loginSchema } = require("../../validators/auth.validator");
 
 async function register(req, res, next) {
   try {
-    const { name, email, password } = req.body;
-    if (!name || !email || !password) {
-      return res.status(400).json({ message: "Name, email and password are required" });
+    const validation = registerSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({ 
+        message: "Invalid input", 
+        errors: validation.error.flatten() 
+      });
     }
 
-    const user = await authService.register({ name, email, password });
+    const user = await authService.register(validation.data);
     res.status(201).json({
       message: "User registered successfully",
       data: user
@@ -20,12 +23,15 @@ async function register(req, res, next) {
 
 async function login(req, res, next) {
   try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required" });
+    const validation = loginSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json({ 
+        message: "Invalid input", 
+        errors: validation.error.flatten() 
+      });
     }
 
-    const result = await authService.login({ email, password });
+    const result = await authService.login(validation.data);
     res.status(200).json({
       message: "Login successful",
       data: result
