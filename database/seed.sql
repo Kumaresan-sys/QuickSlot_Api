@@ -7,10 +7,18 @@ VALUES
 ('Urban Sports Hub', 'Tambaram');
 
 INSERT INTO slots (venue_id, slot_time)
-SELECT v.id, gs.slot_time
+SELECT v.id, gs.slot_time::time
 FROM venues v
 CROSS JOIN generate_series(
-    TIME '06:00',
-    TIME '22:00',
-    INTERVAL '1 hour'
+    '2000-01-01 06:00:00'::timestamp,
+    '2000-01-01 22:00:00'::timestamp,
+    '1 hour'::interval
 ) AS gs(slot_time);
+
+-- Insert sample users
+-- Password for both users is: password123
+INSERT INTO users (name, email, password_hash)
+VALUES
+('John Doe', 'test@example.com', '$2b$10$zdzZcVTEUivyaaXUb39hA.0ZgafOfZJWSHUaEZpjUfrKrYucDBDXa'),
+('Jane Smith', 'jane@example.com', '$2b$10$zdzZcVTEUivyaaXUb39hA.0ZgafOfZJWSHUaEZpjUfrKrYucDBDXa')
+ON CONFLICT (email) DO NOTHING;
