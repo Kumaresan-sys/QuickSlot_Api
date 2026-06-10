@@ -1,5 +1,6 @@
 const authService = require("./auth.service");
 
+
 async function register(req, res, next) {
   try {
     const { name, email, password } = req.body;
