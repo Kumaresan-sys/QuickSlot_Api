@@ -104,7 +104,7 @@ async function testEndpoints() {
   }
 
   console.log("\n--- 6. Testing Get User Bookings ---");
-  const userBookingsRes = await fetch(`${baseUrl}/bookings/users/${userId}/bookings`, { headers });
+  const userBookingsRes = await fetch(`${baseUrl}/users/${userId}/bookings`, { headers });
   const userBookingsData = await userBookingsRes.json();
   if (userBookingsRes.ok && userBookingsData.data.length > 0) {
     console.log(`✅ Get User Bookings successful (Found ${userBookingsData.data.length} bookings)`);
