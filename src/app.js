@@ -24,6 +24,10 @@ app.use("/auth", authRoutes);
 app.use("/venues", venueRoutes);
 app.use("/bookings", bookingRoutes);
 
+const bookingController = require("./modules/bookings/booking.controller");
+const authMiddleware = require("./middlewares/auth.middleware");
+app.get("/users/:id/bookings", authMiddleware, bookingController.getUserBookings);
+
 app.get("/", (req, res) => {
   res.status(200).json({
     message: "Venue Booking API running",
