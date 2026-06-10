@@ -10,9 +10,8 @@ async function findAllVenues() {
   return result.rows;
 }
 
-async function findSlotsByVenueAndDate(venueId, date) {
-  const result = await pool.query(
-    `
+async function findSlotsByVenueAndDate(venueId, date, startTime, endTime) {
+  let query = `
     SELECT 
       s.id AS slot_id,
       s.slot_time,
@@ -27,10 +26,23 @@ async function findSlotsByVenueAndDate(venueId, date) {
       AND b.booking_date = $2
       AND b.status = 'CONFIRMED'
     WHERE s.venue_id = $1
-    ORDER BY s.slot_time ASC
-    `,
-    [venueId, date]
-  );
+  `;
+  
+  const values = [venueId, date];
+
+  if (startTime) {
+    values.push(startTime);
+    query += ` AND s.slot_time >= $${values.length}`;
+  }
+
+  if (endTime) {
+    values.push(endTime);
+    query += ` AND s.slot_time <= $${values.length}`;
+  }
+
+  query += ` ORDER BY s.slot_time ASC`;
+
+  const result = await pool.query(query, values);
 
   return result.rows;
 }

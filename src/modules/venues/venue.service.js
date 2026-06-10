@@ -4,8 +4,8 @@ async function getVenues() {
   return venueRepository.findAllVenues();
 }
 
-async function getVenueSlots(venueId, date) {
-  return venueRepository.findSlotsByVenueAndDate(venueId, date);
+async function getVenueSlots(venueId, date, startTime, endTime) {
+  return venueRepository.findSlotsByVenueAndDate(venueId, date, startTime, endTime);
 }
 
 module.exports = {
