@@ -1,6 +1,6 @@
 const bookingService = require('./booking.service');
 const { createBookingSchema } = require('../../validators/booking.validator');
-const { emitSlotUpdate } = require('../../config/socket');
+const { emitSlotUpdate, releaseSlotHold } = require('../../config/socket');
 
 /**
  * Create a new booking.
@@ -28,6 +28,17 @@ async function createBooking(req, res, next) {
         message: result.message,
       });
     }
+
+    releaseSlotHold(
+      {
+        venueId: validation.data.venueId,
+        slotId: validation.data.slotId,
+        date: validation.data.bookingDate,
+      },
+      {
+        broadcast: false,
+      }
+    );
 
     emitSlotUpdate({
       venueId: validation.data.venueId,
@@ -74,13 +85,18 @@ async function getUserBookings(req, res, next) {
 async function getBooking(req, res, next) {
   try {
     const { id } = req.params;
-    const result = await bookingService.getBooking({ bookingId: id, userId: req.user.id });
+    const result = await bookingService.getBooking({
+      bookingId: id,
+      userId: req.user.id,
+    });
 
     if (result === null) {
       return res.status(404).json({ message: 'Booking not found' });
     }
     if (result === 'forbidden') {
-      return res.status(403).json({ message: 'You are not allowed to access this booking' });
+      return res
+        .status(403)
+        .json({ message: 'You are not allowed to access this booking' });
     }
 
     return res.status(200).json({ data: result });
