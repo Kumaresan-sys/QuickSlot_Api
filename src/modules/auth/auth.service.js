@@ -9,6 +9,15 @@ function hashToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
 
+/**
+ * Register a new user.
+ * @param {Object} payload - Registration data.
+ * @param {string} payload.name - User's full name.
+ * @param {string} payload.email - User's email address.
+ * @param {string} payload.password - Plain text password.
+ * @throws {AppError} If user with email already exists.
+ * @returns {Promise<Object>} Created user object.
+ */
 async function register(payload) {
   const { name, email, password } = payload;
   
@@ -24,6 +33,14 @@ async function register(payload) {
   return user;
 }
 
+/**
+ * Authenticate a user and issue access & refresh tokens.
+ * @param {Object} payload - Login credentials.
+ * @param {string} payload.email - User's email address.
+ * @param {string} payload.password - Plain text password.
+ * @throws {AppError} If credentials are invalid.
+ * @returns {Promise<Object>} Object containing user info and tokens.
+ */
 async function login(payload) {
   const { email, password } = payload;
   
@@ -55,6 +72,12 @@ async function login(payload) {
   };
 }
 
+/**
+ * Refresh an access token using a valid refresh token.
+ * @param {string} refreshToken - The refresh token issued during login.
+ * @throws {AppError} If token is missing, invalid, or expired.
+ * @returns {Promise<Object>} Object containing a new access token.
+ */
 async function refresh(refreshToken) {
   if (!refreshToken) {
     throw new AppError("Refresh token is required", 401);

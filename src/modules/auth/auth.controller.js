@@ -1,6 +1,13 @@
 const authService = require("./auth.service");
 const { registerSchema, loginSchema } = require("../../validators/auth.validator");
 
+/**
+ * Register a new user.
+ * @param {Object} req - Express request object.
+ * @param {Object} req.body - Registration payload.
+ * @param {Object} res - Express response object.
+ * @param {Function} next - Next middleware function.
+ */
 async function register(req, res, next) {
   try {
     const validation = registerSchema.safeParse(req.body);
@@ -21,6 +28,13 @@ async function register(req, res, next) {
   }
 }
 
+/**
+ * Log in a user.
+ * @param {Object} req - Express request object.
+ * @param {Object} req.body - Login payload.
+ * @param {Object} res - Express response object.
+ * @param {Function} next - Next middleware function.
+ */
 async function login(req, res, next) {
   try {
     const validation = loginSchema.safeParse(req.body);

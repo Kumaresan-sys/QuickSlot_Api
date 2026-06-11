@@ -1,5 +1,9 @@
 const venueRepository = require("./venue.repository");
 
+/**
+ * Retrieve all venues.
+ * @returns {Promise<Array>} List of venue objects.
+ */
 async function getVenues() {
   return venueRepository.findAllVenues();
 }
