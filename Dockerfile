@@ -1,17 +1,12 @@
 FROM node:18-alpine
 
-# Create app directory
 WORKDIR /app
 
-# Install app dependencies
 COPY package*.json ./
-RUN npm install
+RUN npm ci --omit=dev
 
-# Bundle app source
 COPY . .
 
-# Expose port
-EXPOSE 5000
+EXPOSE 5001
 
-# Start the application
-CMD [ "npm", "start" ]
+CMD ["npm", "start"]
