@@ -1,5 +1,11 @@
 const venueService = require("./venue.service");
 
+/**
+ * Get all venues.
+ * @param {Object} req - Express request.
+ * @param {Object} res - Express response.
+ * @param {Function} next - Next middleware.
+ */
 async function getVenues(req, res, next) {
   try {
     const venues = await venueService.getVenues();

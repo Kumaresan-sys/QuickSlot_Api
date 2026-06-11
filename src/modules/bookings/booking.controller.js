@@ -1,6 +1,13 @@
 const bookingService = require("./booking.service");
 const { createBookingSchema } = require("../../validators/booking.validator");
 
+/**
+ * Create a new booking.
+ * @param {Object} req - Express request.
+ * @param {Object} req.body - Booking payload.
+ * @param {Object} res - Express response.
+ * @param {Function} next - Next middleware.
+ */
 async function createBooking(req, res, next) {
   try {
     const validation = createBookingSchema.safeParse(req.body);
@@ -43,6 +50,12 @@ async function createBooking(req, res, next) {
   }
 }
 
+/**
+ * Retrieve bookings for a specific user.
+ * @param {Object} req - Express request (expects :id param).
+ * @param {Object} res - Express response.
+ * @param {Function} next - Next middleware.
+ */
 async function getUserBookings(req, res, next) {
   try {
     const { id } = req.params;
