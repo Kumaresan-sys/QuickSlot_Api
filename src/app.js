@@ -15,7 +15,7 @@ const { apiLimiter } = require('./middlewares/rateLimit.middleware');
 const app = express();
 
 app.use(helmet());
-
+app.set("trust proxy", 1);
 const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:3000';
 app.use(
   cors({
