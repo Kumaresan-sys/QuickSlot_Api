@@ -1,86 +1,72 @@
-# QuickSlot API 🏟️
+# QuickSlot API
 
-## 📦 Clone the Repository
+Express + PostgreSQL backend for booking sports slots. The API stores venues,
+hourly slots, users, and bookings with real persistence.
+
+## Run Locally
+
 ```bash
-# Using SSH
-git clone git@github.com:Kumaresan-sys/QuickSlot_Api.git
-# Or using HTTPS
-git clone https://github.com/Kumaresan-sys/QuickSlot_Api.git
+docker compose up -d --build
 ```
 
-## 🛠️ Prerequisites
-- **Node.js** (v18 or later) and **npm**
-- **Docker** and **Docker‑Compose** (required for the database and optional Redis cache)
-- (Optional) **Redis** if you intend to enable caching – the Docker‑Compose file already contains a Redis service you can uncomment.
+The API listens on `http://localhost:5001`. PostgreSQL is exposed on host port
+`5433` to avoid clashing with a local Postgres install.
 
-## 📁 Folder Structure
-```
-QuickSlot_Api/
-├─ src/                     # Application source code
-│  ├─ controllers/         # HTTP request handlers
-│  ├─ services/            # Business‑logic layer
-│  ├─ repositories/        # Data‑access layer (PostgreSQL queries)
-│  ├─ models/              # Domain models / TypeScript interfaces
-│  ├─ config/              # Configuration (env, constants)
-│  └─ index.js             # Entry point – sets up Express & Socket.io
-├─ tests/                   # Integration / unit tests (Jest, Supertest)
-├─ docker-compose.yml       # Development & production compose file
-├─ Dockerfile               # Container image for the API service
-├─ .env.example             # Example environment file
-└─ README.md                # This documentation file
-```
+## Seed Data
 
-## 🚀 Running Locally
-1. **Create an environment file** – copy the example and adjust values if needed:
+`database/seed.sql` creates five venues and hourly slots from 6 AM through
+10 PM for each venue. It also seeds two demo users:
+
+- `test@example.com` / `password123`
+- `jane@example.com` / `password123`
+
+## API
+
+Protected endpoints accept either a JWT `Authorization: Bearer <token>` from
+`/auth/login` or a lightweight `X-User-Id: <uuid>` header.
+
+| Method | Path | Notes |
+| --- | --- | --- |
+| `GET` | `/venues` | List venues |
+| `GET` | `/venues/:id/slots?date=YYYY-MM-DD` | List slots and `AVAILABLE` / `BOOKED` status |
+| `POST` | `/bookings` | Create a booking for the current user |
+| `GET` | `/users/:id/bookings` | List one user's bookings |
+| `DELETE` | `/bookings/:id` | Cancel one booking |
+
+Booking responses:
+
+- `201 Created`: booking succeeded
+- `400 Bad Request`: invalid venue, slot, date, or body shape
+- `401 Unauthorized`: missing or invalid user identity
+- `403 Forbidden`: user tried to access another user's booking
+- `409 Conflict`: slot was already taken, including concurrent races
+
+## Concurrency Approach
+
+The hard double-booking rule is enforced in PostgreSQL, not only in application
+code. `bookings` has a partial unique index on
+`(venue_id, slot_id, booking_date)` where `status = 'CONFIRMED'`. Booking uses a
+transaction and `INSERT ... ON CONFLICT DO NOTHING RETURNING ...`; exactly one
+concurrent insert can return a row, and every loser receives `409 Conflict`.
+Cancelled bookings no longer participate in the unique index, so a cancelled
+slot can be booked again.
+
+## Verification
+
+With the Docker stack running:
+
 ```bash
-cp .env.example .env
+node test_endpoints.js
+node test_concurrency.js
 ```
-2. **Start the stack** (Docker will spin up PostgreSQL, Redis (if enabled) and the API container):
-```bash
-docker-compose down -v && docker-compose up -d --build
-```
-3. **Install Node dependencies** (run inside the `api` container or on host if you prefer):
-```bash
-npm ci
-```
-4. **Run the test suite** (optional but recommended):
-```bash
-npm test   # or: node test_endpoints.js
-```
-5. The API and WebSocket server will be reachable at `http://localhost:5001`.
 
----
+`test_concurrency.js` fires two simultaneous booking requests for the same
+venue/date/slot and expects one `201` and one `409`.
 
-## 🏗️ Architecture Overview
-The service follows **Clean Architecture** principles:
-- **Web layer** – Express routes & Socket.io handlers.
-- **Use‑case / service layer** – Core business rules.
-- **Repository layer** – Abstracts PostgreSQL access.
-- **Entity layer** – Plain JavaScript/TypeScript objects.
+## Architecture Note
 
-All components run in isolated Docker containers, communicating over the internal Docker network.
+Routes stay thin and delegate to controllers, services, and repositories. The
+service layer owns user-facing booking rules such as ownership checks. The
+repository layer owns SQL and the atomic booking insert. Socket.io broadcasts
+slot status changes so app clients can refresh visible slot grids.
 
-
-
----
-
-## 📦 Production Deployment
-The same `docker-compose.yml` can be used in production. Typical steps:
-1. **Provision a host** (VM, bare‑metal, or a cloud instance) with Docker & Docker‑Compose installed.
-2. **Secure the environment** – set real secrets in a `.env` file (do **not** commit this file).
-3. **Launch the stack**:
-```bash
-docker-compose -f docker-compose.yml up -d --scale api=3
-```
-   - `--scale api=N` runs multiple API replicas behind Docker’s built‑in load‑balancing.
-4. **Optional – Orchestrator** – For larger deployments you can drop the compose file into a Kubernetes manifest or a Docker Swarm stack. The services are stateless; only PostgreSQL (and optional Redis) need persistent storage.
-5. **Monitoring** – expose Prometheus metrics from the API container or attach a side‑car such as `cAdvisor` for container health.
-
-## 📚 Additional Notes
-- **Database migrations** – currently handled automatically on container start via the `init.sql` script. For complex schema changes consider a tool like `node-pg-migrate`.
-- **Caching** – the Redis container is defined but commented out in the default `docker-compose.yml`. Uncomment the service and update the configuration if you need read‑through caching for `GET /venues`.
-- **Contributing** – fork the repo, create a feature branch, and open a Pull Request. Run `npm test` before submitting.
-
----
-
-*Happy coding!*
