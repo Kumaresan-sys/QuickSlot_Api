@@ -1,6 +1,8 @@
 async function runConcurrencyTest() {
   const baseUrl = "http://localhost:5001";
-  const date = "2026-06-20"; // Future date for testing
+  const date = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
 
   console.log("🚀 Starting Live Double-Booking Concurrency Test...\n");
 
@@ -49,8 +51,13 @@ async function runConcurrencyTest() {
     headers: { "Authorization": `Bearer ${token1}` }
   }).then(r => r.json());
 
-  const targetSlotId = slots.data[0].slot_id;
-  const targetTime = slots.data[0].slot_time;
+  const availableSlot = slots.data.find((slot) => slot.status === "AVAILABLE");
+  if (!availableSlot) {
+    throw new Error(`No available slots found for ${date}`);
+  }
+
+  const targetSlotId = availableSlot.slot_id;
+  const targetTime = availableSlot.slot_time;
 
   console.log(`\n🎯 TARGET ACQUIRED: Venue: ${venues.data[0].name} | Time: ${targetTime}`);
   console.log(`📱 Phone 1 (Judge 1) is ready.`);
