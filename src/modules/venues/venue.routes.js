@@ -1,10 +1,11 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
 
-const venueController = require("./venue.controller");
-const authMiddleware = require("../../middlewares/auth.middleware");
+const venueController = require('./venue.controller');
+const authMiddleware = require('../../middlewares/auth.middleware');
 
-router.get("/", authMiddleware, venueController.getVenues);
-router.get("/:id/slots", authMiddleware, venueController.getVenueSlots);
+router.get('/', authMiddleware, venueController.getVenues);
+router.get('/:id', authMiddleware, venueController.getVenue);
+router.get('/:id/slots', authMiddleware, venueController.getVenueSlots);
 
 module.exports = router;

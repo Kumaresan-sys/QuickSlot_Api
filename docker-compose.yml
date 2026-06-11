@@ -7,11 +7,18 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: your_password
       POSTGRES_DB: venue_booking
+    ports:
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      # Initialize DB schema and seed data on first boot
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
       - ./database/seed.sql:/docker-entrypoint-initdb.d/02_seed.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d venue_booking"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   api:
     build: .
@@ -20,12 +27,11 @@ services:
     env_file:
       - .env
     environment:
-      # Overrides the DB_HOST in .env to use the docker compose network hostname
       - DB_HOST=db
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
-      # Mount current directory for hot reloading if using dev script
       - .:/app
       - /app/node_modules
 

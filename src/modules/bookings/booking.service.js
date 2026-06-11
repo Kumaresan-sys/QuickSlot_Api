@@ -1,36 +1,39 @@
-const bookingRepository = require("./booking.repository");
+const bookingRepository = require('./booking.repository');
 
-/**
- * Create a new booking.
- * @param {Object} payload - Booking details (userId, venueId, slotId, bookingDate).
- * @returns {Promise<Object>} Result of the booking transaction.
- */
 async function createBooking(payload) {
   return bookingRepository.createBookingTransaction(payload);
 }
 
-/**
- * Retrieve all bookings for a given user.
- * @param {string|number} userId - Identifier of the user.
- * @returns {Promise<Array>} List of bookings.
- */
 async function getUserBookings(userId) {
   return bookingRepository.findBookingsByUserId(userId);
 }
 
 /**
- * Cancel a booking if it belongs to the user.
- * @param {Object} param0 - Parameters.
- * @param {string|number} param0.bookingId - Booking identifier.
- * @param {string|number} param0.userId - User identifier.
- * @returns {Promise<Object|null>} Cancelled booking or null if not found.
+ * Get a single booking by ID.
+ * Returns the booking if the requesting user owns it, 'forbidden' if they don't,
+ * or null if the booking doesn't exist.
  */
-async function cancelBooking({ bookingId, userId }) {
-  return bookingRepository.cancelBooking({ bookingId, userId });
+async function getBooking({ bookingId, userId }) {
+  const booking = await bookingRepository.findBookingById(bookingId);
+  if (!booking) return null;
+  if (booking.user_id !== userId) return 'forbidden';
+  return booking;
 }
 
-module.exports = {
-  createBooking,
-  getUserBookings,
-  cancelBooking,
-};
+/**
+ * Cancel a booking.
+ * Returns the cancelled row on success, 'forbidden' if the user doesn't own it,
+ * or 'not_found' if the booking doesn't exist or is already cancelled.
+ */
+async function cancelBooking({ bookingId, userId }) {
+  const booking = await bookingRepository.findBookingForCancel(bookingId);
+
+  if (!booking) return 'not_found';
+  if (booking.user_id !== userId) return 'forbidden';
+  if (booking.status !== 'CONFIRMED') return 'not_found';
+
+  const cancelled = await bookingRepository.cancelBooking(bookingId);
+  return cancelled || 'not_found';
+}
+
+module.exports = { createBooking, getUserBookings, getBooking, cancelBooking };
